@@ -1,8 +1,3 @@
-# TODO: Need to include more graphs about people who have heart disease
-# TODO: First do it in jupyter notebook, to have glimpse what are pattern
-#       among people who have disease
-# TODO: Write the Results according to graphs
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -55,6 +50,7 @@ def cleaningData():
     return cleanedData
 
 cleanedData = cleaningData()
+data_of_people_have_heart_disease = cleanedData[cleanedData['target'] == 1]
 
 st.write('## Exploratory Data Analysis')
 
@@ -90,9 +86,42 @@ st.pyplot(fig)
 
 st.divider()
 
+st.write('### Continues Features Distibution of people having heart disease')
+
+fig, axs = plt.subplots(2, 3, figsize=(12, 6))
+distributedColumns = ['age', 'resting bp s', 'cholesterol', 'max heart rate', 'oldpeak']
+
+for col, ax in zip(distributedColumns, axs.flatten()):
+    sns.histplot(data_of_people_have_heart_disease, x=col, kde=True, ax=ax)
+    ax.set_xlabel(col)
+
+# hide the unused subplot (last one)
+axs.flatten()[-1].set_visible(False)
+
+plt.tight_layout()
+st.pyplot(fig)
+
+st.divider()
+
+st.write('### Cateogorial Distributions of people having heart disease')
+
+fig, axs = plt.subplots(2, 3, figsize=(12, 6))
+categoryColumns = ['sex', 'chest pain type', 'fasting blood sugar', 'resting ecg', 'exercise angina', 'ST slope']
+
+for col, ax in zip(categoryColumns, axs.flatten()):
+    ax = sns.countplot(data_of_people_have_heart_disease, x=col, ax=ax)
+    ax.set_xlabel(col.title())
+
+plt.tight_layout()
+
+st.pyplot(fig)
+
+st.divider()
+
+
 st.write("## Results")
-st.text('1. Forest Contain Large Number of Spruce/Fir Trees')
-st.text('2. Trees are usually 3000m Long')
-st.text('3. Trees are generally near to river/lake')
-st.text('4. Trees get more Hillshade during 9 am and Noon')
-st.text('5. Tree 2 can grow in any type of soil specially in type 29')
+st.text('1. People having heart disease generally are of 50-60 age')
+st.text('2. Males are more prone to heart disease compare to females')
+st.text('3. Heart disease generally occur due to Type 4 chest pain( asymptomatic )')
+st.text('4. Heart disease is prone to those people who are not fasting blood sugar')
+st.text('5. Heart disease patient generally see a exercise anigna( chest pain due to lack of oxygen )')
