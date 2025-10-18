@@ -1,10 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+import pickle
 
 st.set_page_config(
     page_title="Heart Disease Prediction",
@@ -12,31 +8,20 @@ st.set_page_config(
     layout='wide'
 )
 
-@st.cache_data
+@st.cache_resource
 def setup_and_train_model():
-    data = pd.read_csv('./dataset.csv')
-    outlier_bloodPressure_index = data[data['resting bp s'] < 75].index
-    outlier_Cholesterol_index = data[data['cholesterol'] == 0].index
-    cleanedData = data.drop(outlier_bloodPressure_index,axis=0)
-    cleanedData = data.drop(outlier_Cholesterol_index,axis=0)
+    with open("model.pkl",'rb') as f:
+        model = pickle.load(f)
+    with open("evaluation.pkl",'rb') as f:
+        evaluation = pickle.load(f)  
 
-    X = cleanedData.drop(['target'],axis=1)
-    y = cleanedData['target']
+    return model, evaluation
 
-    scaler = StandardScaler()
-    scaled_X = scaler.fit_transform(X)
-    
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(scaled_X, y)
-    
-    return model,scaler
-
-model,scaler = setup_and_train_model()
+model,evaluation = setup_and_train_model()
 
 def detectDisease(input_data):
     df = pd.DataFrame([input_data])
-    scaled_df = scaler.fit_transform(df)
-    prediction = model.predict(scaled_df)
+    prediction = model.predict(df)
     return round(float(prediction[0]), 2)
 
 st.title("💖 Heart Disease Prediction Model")
@@ -50,11 +35,11 @@ with col2:
     st.header("Select the Features")
     
     age = st.slider('Age',20,80,40)
-    sex = st.selectbox('Sex',['Female','Male'])
+    sex = st.selectbox('Sex',['Female','Male'],1)
     chest_painType = st.selectbox('Chest Pain Type',['Typical Angina','Atypical Angina','Non-anginal Pain','Asymptomatic'],1)
     resting_BPS = st.slider('Resting Blood Pressure',100,200,140)
     cholesterol = st.slider('Cholestrol',100,600,289)
-    fasting_bloodSugar = st.selectbox('Fasting Blood Sugar',['False','True'])
+    fasting_bloodSugar = st.selectbox('Fasting Blood Sugar',['False','True'],0)
     resting_ECG = st.selectbox('Resting Electrocardiogram',['Normal','Wave Abnormality','Probable'])
     max_heartRate = st.slider('Max HeartRate',75,200,172)
     exerciseAngina = st.selectbox('Exercise Angina',['False','True'])
@@ -95,7 +80,7 @@ with col1:
             "oldpeak":oldPeak,
             "ST slope":STSlope
         }
-        input_data['sex'] = ['Male','Female'].index(sex)
+        input_data['sex'] = ['Female','Male'].index(sex)
         input_data['chest pain type'] = ['Typical Angina','Atypical Angina','Non-anginal Pain','Asymptomatic'].index(chest_painType)+1
         input_data['fasting blood sugar'] = ['False','True'].index(fasting_bloodSugar)
         input_data['resting ecg'] = ['Normal','Wave Abnormality','Probable'].index(resting_ECG)
@@ -107,3 +92,34 @@ with col1:
         st.metric("Heart Disease", ["No Heart Disease","You have Heart Disease"][int(disease)])
     else:
         st.metric("Heart Disease", "No Heart Disease")
+    
+    # Add a divider
+    st.divider()
+    
+    # Show model evaluation metrics
+    st.subheader("Model Performance Metrics")
+    
+    # Create 3 columns for metrics
+    met_col1, met_col2, met_col3 = st.columns(3)
+    
+    with met_col1:
+        st.metric("Accuracy", f"{evaluation['Accuracy']:.2%}")
+        st.metric("F1 Score", f"{evaluation['F1 Score']:.2%}")
+    
+    with met_col2:
+        st.metric("Precision", f"{evaluation['Precision']:.2%}")
+        st.metric("ROC AUC", f"{evaluation['ROC AUC']:.2%}")
+    
+    with met_col3:
+        st.metric("Recall", f"{evaluation['Recall']:.2%}")
+    
+    with st.expander("What do these metrics mean?"):
+        st.markdown("""
+        - **Accuracy**: Overall correct predictions (both positive and negative)
+        - **Precision**: When model predicts heart disease, how often it is correct
+        - **Recall**: Of all actual heart disease cases, how many were caught
+        - **F1 Score**: Balance between precision and recall
+        - **ROC AUC**: Model's ability to distinguish between classes (1.0 = perfect)
+        
+        Values closer to 100% indicate better performance.
+        """)
