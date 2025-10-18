@@ -93,13 +93,11 @@ with col1:
     else:
         st.metric("Heart Disease", "No Heart Disease")
     
-    # Add a divider
+    
     st.divider()
     
-    # Show model evaluation metrics
     st.subheader("Model Performance Metrics")
     
-    # Create 3 columns for metrics
     met_col1, met_col2, met_col3 = st.columns(3)
     
     with met_col1:
