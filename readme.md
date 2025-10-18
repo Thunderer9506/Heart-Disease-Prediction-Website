@@ -6,7 +6,7 @@ A compact Streamlit web application for exploring a heart-disease dataset and pr
 
 ## Live demo
 A deployed demo will run the full interactive UI: dataset overview, EDA tabs, and the prediction page with model metrics and patient-level prediction.  
-Link: <add-your-live-demo-url-here>
+Link: ![Live Demo](https://thunderer9506-heart-disease-prediction-website-home-sokfjy.streamlit.app/)
 
 ---
 
